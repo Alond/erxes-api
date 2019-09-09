@@ -1,16 +1,44 @@
-import { ActivityLogs, ConversationMessages, Conversations, Customers } from '../db/models';
+import { ActivityLogs, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
 import { CONVERSATION_STATUSES } from '../db/models/definitions/constants';
 import { graphqlPubsub } from '../pubsub';
+
+interface IMessage {
+  status: string;
+  attachments: string[];
+  readUserIds: string[];
+  content?: string;
+}
 
 /*
  * Handle requests from integrations api
  */
 const integrationsApiMiddleware = async (req, res) => {
-  const { action, payload } = req.body;
+  const { action, metaInfo, payload } = req.body;
   const doc = JSON.parse(payload);
 
-  if (action === 'create-customer') {
-    const customer = await Customers.createCustomer(doc);
+  if (action === 'create-or-update-customer') {
+    const integration = await Integrations.findOne({ _id: doc.integrationId });
+
+    if (!integration) {
+      throw new Error(`Integration not found: ${doc.integrationId}`);
+    }
+
+    const { primaryPhone } = doc;
+
+    let customer;
+
+    if (primaryPhone) {
+      customer = await Customers.findOne({ primaryPhone }).lean();
+    }
+
+    if (customer) {
+      await Customers.updateCustomer(customer._id, doc);
+    } else {
+      customer = await Customers.createCustomer({
+        ...doc,
+        scopeBrandIds: integration.brandId,
+      });
+    }
 
     return res.json({ _id: customer._id });
   }
@@ -26,23 +54,21 @@ const integrationsApiMiddleware = async (req, res) => {
   if (action === 'create-conversation-message') {
     const message = await ConversationMessages.createMessage(doc);
 
-    await Conversations.updateOne(
-      { _id: message.conversationId },
-      {
-        $set: {
-          // Reopen its conversation if it's closed
-          status: CONVERSATION_STATUSES.OPEN,
+    const messageDoc: IMessage = {
+      // Reopen its conversation if it's closed
+      status: CONVERSATION_STATUSES.OPEN,
 
-          // setting conversation's content to last message
-          content: message.content,
+      attachments: message.attachments,
 
-          attachments: message.attachments,
+      // Mark as unread
+      readUserIds: [],
+    };
 
-          // Mark as unread
-          readUserIds: [],
-        },
-      },
-    );
+    if (message.content && metaInfo === 'replaceContent') {
+      messageDoc.content = message.content;
+    }
+
+    await Conversations.updateOne({ _id: message.conversationId }, { $set: messageDoc });
 
     graphqlPubsub.publish('conversationClientMessageInserted', {
       conversationClientMessageInserted: message,

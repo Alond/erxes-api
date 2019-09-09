@@ -1,6 +1,6 @@
-import { Companies, Customers, Pipelines, Stages, Users } from '../../db/models';
+import { Companies, Customers, Notifications, Pipelines, Stages, Users } from '../../db/models';
 import { ITaskDocument } from '../../db/models/definitions/tasks';
-import { IUserDocument } from '../../db/models/definitions/users';
+import { IContext } from '../types';
 import { boardId } from './boardUtils';
 
 export default {
@@ -34,7 +34,7 @@ export default {
     return Stages.findOne({ _id: task.stageId });
   },
 
-  isWatched(task: ITaskDocument, _args, { user }: { user: IUserDocument }) {
+  isWatched(task: ITaskDocument, _args, { user }: IContext) {
     const watchedUserIds = task.watchedUserIds || [];
 
     if (watchedUserIds.includes(user._id)) {
@@ -42,5 +42,9 @@ export default {
     }
 
     return false;
+  },
+
+  hasNotified(deal: ITaskDocument, _args, { user }: IContext) {
+    return Notifications.checkIfRead(user._id, deal._id);
   },
 };

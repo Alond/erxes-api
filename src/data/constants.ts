@@ -5,7 +5,9 @@ export const INTEGRATION_KIND_CHOICES = {
   MESSENGER: 'messenger',
   FORM: 'form',
   FACEBOOK: 'facebook',
-  ALL: ['messenger', 'form', 'facebook'],
+  GMAIL: 'gmail',
+  CALLPRO: 'callpro',
+  ALL: ['messenger', 'form', 'facebook', 'gmail', 'callpro'],
 };
 
 export const MESSAGE_KINDS = {
@@ -250,6 +252,26 @@ export const NOTIFICATION_MODULES = [
       {
         name: 'taskDelete',
         text: 'Task card deleted',
+      },
+    ],
+  },
+  {
+    name: 'customers',
+    description: 'Customers',
+    types: [
+      {
+        name: 'customerMention',
+        text: 'Mention on customer note',
+      },
+    ],
+  },
+  {
+    name: 'companies',
+    description: 'Companies',
+    types: [
+      {
+        name: 'companyMention',
+        text: 'Mention on company note',
       },
     ],
   },

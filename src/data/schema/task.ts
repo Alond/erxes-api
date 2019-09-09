@@ -1,6 +1,7 @@
 const commonTypes = `
   order: Int
   createdAt: Date
+  hasNotified: Boolean
 `;
 
 export const types = `
@@ -19,6 +20,7 @@ export const types = `
     customers: [Customer]
     assignedUsers: [User]
     isWatched: Boolean
+    attachments: [Attachment]
     stage: Stage
     pipeline: Pipeline
     modifiedAt: Date
@@ -48,10 +50,10 @@ export const queries = `
 `;
 
 const commonParams = `
-  name: String!,
   stageId: String,
   assignedUserIds: [String],
   companyIds: [String],
+  attachments: [AttachmentInput],
   customerIds: [String],
   closeDate: Date,
   description: String,
@@ -60,8 +62,8 @@ const commonParams = `
 `;
 
 export const mutations = `
-  tasksAdd(${commonParams}): Task
-  tasksEdit(_id: String!, ${commonParams}): Task
+  tasksAdd(name: String!, ${commonParams}): Task
+  tasksEdit(_id: String!, name: String, ${commonParams}): Task
   tasksChange( _id: String!, destinationStageId: String): Task
   tasksUpdateOrder(stageId: String!, orders: [OrderItem]): [Task]
   tasksRemove(_id: String!): Task

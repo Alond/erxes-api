@@ -1,5 +1,6 @@
 import { Brands, Segments, Tags, Users } from '../../db/models';
 import { IEngageMessageDocument } from '../../db/models/definitions/engages';
+import { IContext } from '../types';
 
 export default {
   segments(engageMessage: IEngageMessageDocument) {
@@ -28,5 +29,9 @@ export default {
     if (messenger && messenger.brandId) {
       return Brands.findOne({ _id: messenger.brandId });
     }
+  },
+
+  stats(engageMessage: IEngageMessageDocument, _args, { dataSources }: IContext) {
+    return dataSources.EngagesAPI.engagesStats(engageMessage._id);
   },
 };

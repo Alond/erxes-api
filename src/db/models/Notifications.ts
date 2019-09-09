@@ -12,6 +12,7 @@ export interface INotificationModel extends Model<INotificationDocument> {
   markAsRead(ids: string[], userId?: string): void;
   createNotification(doc: INotification, createdUser?: IUserDocument | string): Promise<INotificationDocument>;
   updateNotification(_id: string, doc: INotification): Promise<INotificationDocument>;
+  checkIfRead(userId: string, contentTypeId: string): Promise<boolean>;
   removeNotification(_id: string): void;
 }
 
@@ -31,21 +32,34 @@ export const loadNotificationClass = () => {
     }
 
     /**
+     * Check if user has read notification
+     */
+    public static async checkIfRead(userId, contentTypeId) {
+      const notification = await Notifications.findOne({ isRead: false, receiver: userId, contentTypeId });
+
+      return notification ? false : true;
+    }
+
+    /**
      * Create a notification
      */
-    public static async createNotification(doc: INotification, createdUser?: IUserDocument | string) {
+    public static async createNotification(doc: INotification, createdUserId: string) {
       // if receiver is configured to get this notification
       const config = await NotificationConfigurations.findOne({
         user: doc.receiver,
         notifType: doc.notifType,
       });
 
+      if (!config) {
+        return Notifications.create({ ...doc, createdUser: createdUserId });
+      }
+
       // receiver disabled this notification
-      if (config && !config.isAllowed) {
+      if (!config.isAllowed) {
         throw new Error('Configuration does not exist');
       }
 
-      return Notifications.create({ ...doc, createdUser });
+      return Notifications.create({ ...doc, createdUser: createdUserId });
     }
 
     /**

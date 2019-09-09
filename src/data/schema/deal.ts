@@ -1,6 +1,7 @@
 const commonTypes = `
   order: Int
   createdAt: Date
+  hasNotified: Boolean
 `;
 
 export const types = `
@@ -24,20 +25,26 @@ export const types = `
     modifiedAt: Date
     modifiedBy: String
     stage: Stage
+    attachments: [Attachment]
     isWatched: Boolean
     ${commonTypes}
   }
 
-  type DealTotalAmount {
-    _id: String
-    currency: String
+  type DealTotalCurrency {
     amount: Float
+    name: String
+  }
+
+  type TotalForType {
+    _id: String
+    name: String
+    currencies: [DealTotalCurrency]
   }
 
   type DealTotalAmounts {
     _id: String
     dealCount: Int
-    dealAmounts: [DealTotalAmount]
+    totalForType: [TotalForType]
   }
 `;
 
@@ -61,8 +68,8 @@ export const queries = `
     overdue: String
   ): [Deal]
   dealsTotalAmounts(
-    date: ItemDate 
-    pipelineId: String 
+    date: ItemDate
+    pipelineId: String
     customerIds: [String]
     companyIds: [String]
     assignedUserIds: [String]
@@ -76,10 +83,10 @@ export const queries = `
 `;
 
 const commonParams = `
-  name: String!,
   stageId: String,
   assignedUserIds: [String],
   companyIds: [String],
+  attachments: [AttachmentInput],
   customerIds: [String],
   closeDate: Date,
   description: String,
@@ -88,8 +95,8 @@ const commonParams = `
 `;
 
 export const mutations = `
-  dealsAdd(${commonParams}): Deal
-  dealsEdit(_id: String!, ${commonParams}): Deal
+  dealsAdd(name: String!, ${commonParams}): Deal
+  dealsEdit(_id: String!, name: String, ${commonParams}): Deal
   dealsChange( _id: String!, destinationStageId: String): Deal
   dealsUpdateOrder(stageId: String!, orders: [OrderItem]): [Deal]
   dealsRemove(_id: String!): Deal

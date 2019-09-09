@@ -74,6 +74,13 @@ export const types = `
     wallpaper: String
     logo: String
   }
+
+  input gmailAttachmentData {
+    filename: String
+    size: Int
+    mimeType: String
+    data: String
+  }
 `;
 
 export const queries = `
@@ -133,9 +140,24 @@ export const mutations = `
     kind: String!,
     name: String!,
     brandId: String!,
-    accountId: String!,
+    accountId: String,
     data: JSON): Integration
 
   integrationsRemove(_id: String!): JSON
   integrationsRemoveAccount(_id: String!): JSON
+
+  integrationSendMail(
+    erxesApiId: String!
+    subject: String!
+    textHtml: String!
+    textPlain: String!
+    to: String!
+    cc: String
+    bcc: String
+    from: String!
+    headerId: String
+    threadId: String
+    references: String
+    attachments: [gmailAttachmentData]
+  ): JSON
 `;
